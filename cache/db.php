@@ -25,11 +25,11 @@ class DB {
 		if (is_object(self::$pdo)) {
 			return ;
 		}
-		//连接
-		$options = array(
+		
+		$options = [
 		    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, //默认是PDO::ERRMODE_SILENT, 0, (忽略错误模式)
 		    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, // 默认是PDO::FETCH_BOTH, 4 默认关联索引遍历
-		);
+		];
 		try {
 		    self::$pdo = new PDO($db['dsn'], $db['username'], $db['password'], $options);
 		} catch (PDOException $e) {
@@ -82,12 +82,11 @@ class DB {
 		}
 		$items = implode(',', $items);
 		$values = implode(',', $values);
-		$sql = "insert into {$table} ({$items})values({$values})";
-
+		$sql = "INSERT IGNORE INTO {$table}  ({$items}) VALUES ({$values})";
 		$count  =  self::$pdo->exec($sql); //返回受影响的行数 
 		return self::$pdo->lastInsertId();
 	}
-	
+
 	public static function update($table, $data, $where = null)
 	{
 		self::_init(self::$db);
@@ -120,7 +119,7 @@ class DB {
 	// 		self::_init_mysql();
 	// 	}
 	// }
-	
+
 	//2)使用prepare 推荐!
 	/*
 	$stmt = $pdo->prepare("insert into user(name,gender,age)values(?,?,?)");

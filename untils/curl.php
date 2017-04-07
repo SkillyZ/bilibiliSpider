@@ -20,6 +20,7 @@ class curl {
         curl_setopt(self::$handle, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(self::$handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36");
         // curl_setopt(self::$handle, CURLOPT_TIMEOUT, $timeout);
+        // curl_setopt_array(self::$handle, $options);
 
 	}
 	

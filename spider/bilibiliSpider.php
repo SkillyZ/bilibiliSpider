@@ -5,10 +5,42 @@ class bilibiliSpider {
 
 	public function run()
 	{
-		$result = $this->curl(1);
-		$result = $this->insert($result);
+		$max = 100;
+		$date = \cache\Loger::record();
+		$ids = [];
+
+		for ($i = 1; $i <= $max; $i++)
+        { 
+			$id['mid'] = $i;
+			$ids[] = $id;
+        }
+
+		$results = $this->curlMulti($ids);
+		foreach ($results as $result) {
+			$this->insert($result);
+		}
+
 		
+		// for ($i = 1; $i <= $max; $i++)
+  //       { 
+		// 	$result = $this->curl($i);
+		// 	$result = $this->insert($result);
+  //       }
+
+		\cache\Loger::record($date);
 	}
+
+	public function curlMulti($post)
+	{
+		$url = 'http://space.bilibili.com/ajax/member/GetInfo';
+		$options = [
+			'CLIENT-IP' => '172.18.3.200',
+			'X-FORWARDED-FOR' => '172.18.3.200',
+			'REFERER' => 'http://space.bilibili.com'
+		];
+		return \untils\curlMulti::post($url, $post, $options);
+	}
+
 
 	public function curl($uid)
 	{
