@@ -1,40 +1,71 @@
 <?php
+namespace spider;
 
 class bilibiliSpider {
 
 	public function run()
 	{
-		$this->getUser(1);
+		$result = $this->curl(1);
+		$result = $this->insert($result);
+		
 	}
 
-	public function getUser($uid = 1)
+	public function curl($uid)
 	{
-	    $headers['CLIENT-IP'] = '172.18.3.200';  
-	    $headers['X-FORWARDED-FOR'] = '172.18.3.200'; 
-	    $headerArr = array();
-	    
-	    foreach( $headers as $n => $v ) {
-	        $headerArr[] = $n .':' . $v;   
-	    }
+		$url = 'http://space.bilibili.com/ajax/member/GetInfo';
+		$options = [
+			'CLIENT-IP' => '172.18.3.200',
+			'X-FORWARDED-FOR' => '172.18.3.200',
+			'REFERER' => 'http://space.bilibili.com'
+		];
+	    $post['mid'] = $uid;
+		return json_decode(\untils\curl::post($url, $post, $options), true);
+	}
 
-	    ob_start();
-	    $ch = curl_init();
-	    curl_setopt ($ch, CURLOPT_URL, "http://space.bilibili.com/ajax/member/GetInfo");
-	    curl_setopt ($ch, CURLOPT_HTTPHEADER , $headerArr);  //构造IP
-	    // for ($uid = 1; $uid < $max ; $uid++) { 
-	    //     $post_string = [
-	    //         'mid' => $uid
-	    //     ];
-	    // }
-	    $post_string['mid'] = $uid;
-	    curl_setopt ($ch, CURLOPT_REFERER, "http://space.bilibili.com/$uid/");
-	    curl_setopt ($ch, CURLOPT_HEADER, false);
-	    curl_setopt ($ch, CURLOPT_POSTFIELDS, http_build_query($post_string));
-	    curl_setopt ($ch, CURLOPT_POST, 1);  
-	    curl_exec ($ch);
-	    curl_close ($ch);
-	    $out = ob_get_contents();
-	    ob_clean();
-	    print_r($out);
+	public function insert($result)
+	{
+		if (isset($result['status']) && $result['status']) {
+
+			$data = $result['data'];
+			$city = '';
+			$province = '';
+			$regtime = '';
+			if (isset($data['place']) && $data['place']) {
+				$place = explode(' ', $data['place']);
+				if (count($place) == 1) {
+					$province = $data['place'];
+				} else {
+					$province = current($place);
+					$city = next($place);
+				}
+			}
+			if (isset($data['regtime'])) {
+				$regtime = date('Y-m-d H:i:s', $data['regtime']);
+			}
+			$insert = [
+				'id' => $data['mid'],
+				'name' => $data['name'],
+				'sex' => $data['sex'],
+				'regtime' => $regtime,
+				'fans' => $data['fans'],
+				'attention' => $data['attention'],
+				'play_num' => $data['playNum'],
+				'province' => $province,
+				'city' => $city,
+			];
+			$result = \cache\DB::insert('user', $insert);
+		}
+	}
+
+	public function test() {
+		$result = \cache\DB::query('select * from user');
+		$data = [
+			'id' => 3,
+			'attention' => 33,
+			'fans' => 22,
+		];
+		$result = \cache\DB::insert('user', $data);
+
+		p($result);
 	}
 }
