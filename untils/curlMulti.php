@@ -8,7 +8,8 @@ class curlMulti {
 	public static function init($url, $options, $data, $state = 'POST')
 	{
 	    $headerArr = [];
-	    $referer = arrayRemove($options, 'REFERER');
+        $referer = arrayRemove($options, 'REFERER');
+	    $timeout = arrayRemove($options, 'TIMEOUT', 120);
 	    foreach($options as $n => $v ) {
 	        $headerArr[] = $n .':' . $v;
 	    }
@@ -19,18 +20,17 @@ class curlMulti {
         curl_setopt($handle, CURLOPT_HEADER, false);
         curl_setopt($handle, CURLOPT_RETURNTRANSFER, true); //作为变量储存
         curl_setopt($handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36");
-        
         curl_setopt($handle, CURLOPT_URL, $url);
         curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $state);
         curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, $timeout);
 
         // curl_setopt($handle, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
-        // curl_setopt($handle, CURLOPT_PROXY, "183.140.76.221"); //代理服务器地址
-        // curl_setopt($handle, CURLOPT_PROXYPORT, 808); //代理服务器端口
+        // curl_setopt($handle, CURLOPT_PROXY, "119.176.38.36"); //代理服务器地址
+        // curl_setopt($handle, CURLOPT_PROXYPORT, 8118); //代理服务器端口
         // curl_setopt($handle, CURLOPT_PROXYTYPE, CURLPROXY_HTTP); //使用http代理模式
         // curl_setopt($handle, CURLOPT_PROXYUSERPWD, ":"); //http代理认证帐号，username:password的格式
-        // curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, $timeout);
-        // curl_setopt($handle, CURLOPT_FOLLOWLOCATION, 1);
+        // curl_setopt($handle, CURLOPT_FOLLOWLOCATION, 1); //使用自动跳转
         // curl_setopt($handle, CURLOPT_COOKIE, self::$user_cookie);
         
         return $handle;
@@ -43,7 +43,7 @@ class curlMulti {
             $chList[] = static::init($url, $options, $val);
         }
 
-        foreach ($chList as $ch){
+        foreach ($chList as $ch) {
             curl_multi_add_handle($mch, $ch);
         }
 
@@ -66,7 +66,7 @@ class curlMulti {
                     $result[] = json_decode($output, true);
                 } else {
                     // usleep(1000 * 60 * 10);
-                    echo 'error' . PHP_EOL;
+                    p($info, $error);
                 }
                 //保证同时有$max_size个请求在处理
                 // if ($index < count($userList))

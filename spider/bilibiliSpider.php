@@ -5,8 +5,8 @@ class bilibiliSpider {
 
 	public function run()
 	{
-		$max = 1000; //总抓取数目
-		$maxSize = 2; //一次并发请求
+		$max = 10000; //总抓取数目
+		$maxSize = 20; //一次并发请求
 		$date = \cache\Loger::record();
 		$queues = [];
 		$users = [];
@@ -47,8 +47,8 @@ class bilibiliSpider {
 	{
 		$url = 'http://space.bilibili.com/ajax/member/GetInfo';
 		$default = [
-			// 'CLIENT-IP' => '183.140.76.221',
-			// 'X-FORWARDED-FOR' => '183.140.76.221',
+			'CLIENT-IP' => '183.140.76.221',
+			'X-FORWARDED-FOR' => '183.140.76.221',
 			'REFERER' => 'http://space.bilibili.com'
 		];
 		$options = array_merge($default, $option);
