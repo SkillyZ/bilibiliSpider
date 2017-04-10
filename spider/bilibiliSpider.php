@@ -5,20 +5,33 @@ class bilibiliSpider {
 
 	public function run()
 	{
-		$max = 100;
+		$max = 1000; //总抓取数目
+		$maxSize = 2; //一次并发请求
 		$date = \cache\Loger::record();
-		$ids = [];
+		$queues = [];
+		$users = [];
 
 		for ($i = 1; $i <= $max; $i++)
         { 
 			$id['mid'] = $i;
-			$ids[] = $id;
+			$queues[] = $id;
         }
 
-		$results = $this->curlMulti($ids);
-		foreach ($results as $result) {
-			$this->insert($result);
-		}
+        foreach ($queues as $key =>  $user) {
+        	$users[] = array_shift($queues);
+        	if (count($users) >= $max) {
+				$results = $this->curlMulti($users);
+				foreach ($results as $result) {
+					$this->insert($result);
+				}
+				$users = [];
+        	}
+            usleep(1000);
+        }
+		// $results = $this->curlMulti($users);
+		// foreach ($results as $result) {
+		// 	$this->insert($result);
+		// }
 
 		
 		// for ($i = 1; $i <= $max; $i++)
@@ -30,14 +43,15 @@ class bilibiliSpider {
 		\cache\Loger::record($date);
 	}
 
-	public function curlMulti($post)
+	public function curlMulti($post, $option = [])
 	{
 		$url = 'http://space.bilibili.com/ajax/member/GetInfo';
-		$options = [
-			'CLIENT-IP' => '172.18.3.200',
-			'X-FORWARDED-FOR' => '172.18.3.200',
+		$default = [
+			// 'CLIENT-IP' => '183.140.76.221',
+			// 'X-FORWARDED-FOR' => '183.140.76.221',
 			'REFERER' => 'http://space.bilibili.com'
 		];
+		$options = array_merge($default, $option);
 		return \untils\curlMulti::post($url, $post, $options);
 	}
 

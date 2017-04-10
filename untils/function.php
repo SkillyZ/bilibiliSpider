@@ -3,8 +3,8 @@
 function p($args, $die = true)
 {
     // header('Content-type:text/html;charset=utf-8');
-    // iconv('UTF-8', 'GB2312', $val)
 	foreach (func_get_args() as $key => $val) {
+        is_string($val) && $val = iconv('UTF-8', 'GB2312', $val);
 		echo '<pre>'. print_r($val, true) .'</pre>';
 	}
 	if ($die) die;
