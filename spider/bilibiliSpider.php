@@ -3,31 +3,69 @@ namespace spider;
 
 class bilibiliSpider {
 
+	public $url = 'http://api.bilibili.com/x/web-interface/archive/stat'; //?callback=jQuery17205247983639302185_1505354971465&aid=13741512&jsonp=jsonp&_=1505354971900
+
 	public function run()
 	{
-		$max = 10000; //总抓取数目
+		$max = 61; //总抓取数目
 		$maxSize = 20; //一次并发请求
+		$cycle = ceil ($max / $maxSize);
 		$date = \cache\Loger::record();
 		$queues = [];
 		$users = [];
 
+		$options = [
+			'CLIENT-IP' => '180.175.168.14',
+			'X-FORWARDED-FOR' => '180.175.168.14',
+			// 'REFERER' => "http://www.bilibili.com/video/av{$aid}/",
+		];
+
+		// for ($i = 1; $i <= $max; $i++)
+  //       { 
+		// 	$id['mid'] = $i;
+		// 	$queues[] = $id;
+  //       }
+
+    //     foreach ($queues as $key =>  $user) {
+    //     	$users[] = array_shift($queues);
+    //     	if (count($users) >= $max) {
+				// $results = $this->curlMulti($users);
+				// foreach ($results as $result) {
+				// 	$this->insert($result);
+				// }
+				// $users = [];
+    //     	}
+    //         usleep(1000);
+    //     } 
+
 		for ($i = 1; $i <= $max; $i++)
-        { 
-			$id['mid'] = $i;
-			$queues[] = $id;
+        {
+			$time = time();
+        	$aid = $i;
+			$url = $this->url . "?callback=jQuery17205247983639302185_{$time}465&aid={$aid}&jsonp=jsonp&_={$time}900";
+        	$queues[] = $url;
+        }
+        
+		for ($i = 0; $i < $cycle; $i++)
+        {
+			$queue = array_slice($queues, $maxSize * ($i), $maxSize);
+			$results = $this->curlMulti($queue);
+			foreach ($results as $result) {
+	        	// $options['REFERER'] = "http://www.bilibili.com/video/av{$aid}";
+
+		        $result = strstr($result, '(');
+		        $result = str_replace(['(', ')'], '', $result);
+		        $result = json_decode($result, true);
+				$result = $this->insert_video($result);
+			}
+            usleep(1000);
+
         }
 
-        foreach ($queues as $key =>  $user) {
-        	$users[] = array_shift($queues);
-        	if (count($users) >= $max) {
-				$results = $this->curlMulti($users);
-				foreach ($results as $result) {
-					$this->insert($result);
-				}
-				$users = [];
-        	}
-            usleep(1000);
-        }
+        echo 'chengg';
+
+
+
 		// $results = $this->curlMulti($users);
 		// foreach ($results as $result) {
 		// 	$this->insert($result);
@@ -36,39 +74,55 @@ class bilibiliSpider {
 		
 		// for ($i = 1; $i <= $max; $i++)
   //       { 
-		// 	$result = $this->curl($i);
-		// 	$result = $this->insert($result);
+		// 	$time = time();
+  //       	$aid = '12';
+  //       	$options['REFERER'] = "http://www.bilibili.com/video/av{$aid}";
+		// 	$url = $this->url . "?callback=jQuery17205247983639302185_{$time}465&aid={$aid}&jsonp=jsonp&_={$time}900";
+		// 	$result = $this->curl($url, $options);
+
+	 //        $result = strstr($result, '(');
+	 //        $result = str_replace(['(', ')'], '', $result);
+	 //        $result = json_decode($result, true);
+		// 	$result = $this->insert_video($result);
+		// 	print_r($result);die;
   //       }
 
 		\cache\Loger::record($date);
 	}
 
-	public function curlMulti($post, $option = [])
+	public function curlMulti($urls, $options = [])
 	{
-		$url = 'http://space.bilibili.com/ajax/member/GetInfo';
-		$default = [
-			'CLIENT-IP' => '183.140.76.221',
-			'X-FORWARDED-FOR' => '183.140.76.221',
-			'REFERER' => 'http://space.bilibili.com'
-		];
-		$options = array_merge($default, $option);
-		return \untils\curlMulti::post($url, $post, $options);
+		// $this->url = 'http://space.bilibili.com/ajax/member/GetInfo';
+		return \untils\curlMulti::post($urls, '', $options);
 	}
 
-
-	public function curl($uid)
+	public function curl($url, $options = [])
 	{
-		$url = 'http://space.bilibili.com/ajax/member/GetInfo';
-		$options = [
-			'CLIENT-IP' => '172.18.3.200',
-			'X-FORWARDED-FOR' => '172.18.3.200',
-			'REFERER' => 'http://space.bilibili.com'
-		];
-	    $post['mid'] = $uid;
-		return json_decode(\untils\curl::post($url, $post, $options), true);
+		return \untils\curl::get($url, $options);
 	}
 
-	public function insert($result)
+	public function insert_video($result) {
+		if (isset($result['data']) && $result['data']) {
+
+			$data = $result['data'];
+			$insert = [
+				'aid' => $data['aid'],
+				'coin' => $data['coin'],
+				'danmaku' => $data['danmaku'],
+				'favorite' => $data['favorite'],
+				'reply' => $data['reply'],
+				'share' => $data['share'],
+				'view' => $data['view'],
+				'created' => time(),
+				// 'his_rank' => $data['his_rank'],
+				// 'no_reprint' => $data['no_reprint'],
+				// 'now_rank' => $data['now_rank'],
+			];
+			$result = \cache\DB::insert('bilibili_video', $insert);
+		}
+	}
+
+	public function insert_user($result)
 	{
 		if (isset($result['status']) && $result['status']) {
 

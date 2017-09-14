@@ -22,8 +22,10 @@ class curlMulti {
         curl_setopt($handle, CURLOPT_USERAGENT, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36");
         curl_setopt($handle, CURLOPT_URL, $url);
         curl_setopt($handle, CURLOPT_CUSTOMREQUEST, $state);
-        curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($data));
         curl_setopt($handle, CURLOPT_CONNECTTIMEOUT, $timeout);
+        if ($state == 'POST') {
+            curl_setopt($handle, CURLOPT_POSTFIELDS, http_build_query($data));
+        }
 
         // curl_setopt($handle, CURLOPT_PROXYAUTH, CURLAUTH_BASIC); //代理认证模式
         // curl_setopt($handle, CURLOPT_PROXY, "119.176.38.36"); //代理服务器地址
@@ -36,13 +38,20 @@ class curlMulti {
         return $handle;
 	}
 
-    public static function post($url, $userList, $options = [])
+    public static function post($url, $params, $options = [])
     {
         $mch = curl_multi_init();
-        foreach ($userList as $key => $val) {
-            $chList[] = static::init($url, $options, $val);
-        }
+        if (isset($options['method']) && $options['method'] = 'post') {
+            foreach ($params as $key => $val) {
+                $chList[] = static::init($url, $options, $val);
+            }
+        } else {
 
+            foreach ($url as $key => $val) {
+                $chList[] = static::init($val, $options, '', 'GET');
+            }
+
+        }
         foreach ($chList as $ch) {
             curl_multi_add_handle($mch, $ch);
         }
@@ -61,15 +70,14 @@ class curlMulti {
                 $output = curl_multi_getcontent($done['handle']);
                 $error = curl_error($done['handle']);
                 
-                // p($info);
                 if ($info['http_code'] != 403) { //403
-                    $result[] = json_decode($output, true);
+                    $result[] = $output;
                 } else {
                     // usleep(1000 * 60 * 10);
                     p($info, $error);
                 }
                 //保证同时有$max_size个请求在处理
-                // if ($index < count($userList))
+                // if ($index < count($params))
                 // {
                 //     $user = array_shift($userQueue);
                 //     $ch = static::init($url, $options, $user);

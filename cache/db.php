@@ -4,10 +4,10 @@ namespace cache;
 use \PDO;
 class DB {
 	public static $db = array(
-	    'dsn' => 'mysql:host=localhost;dbname=bilibili;port=3306;charset=utf8',
+	    'dsn' => 'mysql:host=localhost;dbname=spider;port=3306;charset=utf8',
 	    'host' => 'localhost',
 	    'port' => '3306',
-	    'dbname' => 'bilibili',
+	    // 'dbname' => 'bilibili_video',
 	    'username' => 'root',
 	    'password' => '',
 	    'charset' => 'utf8',

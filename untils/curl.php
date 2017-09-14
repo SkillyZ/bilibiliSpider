@@ -32,7 +32,7 @@ class curl {
         curl_setopt(self::$handle, CURLOPT_CUSTOMREQUEST, 'GET');
 
         $result = curl_exec(self::$handle);
-
+        
         static::close();
 
         return $result;
